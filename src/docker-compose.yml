@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  catalog.app:
+    image: ${DOCKER_REGISTRY-}catalogapp
+    build:
+      context: .
+      dockerfile: Services/Catalog/Catalog.App/Dockerfile

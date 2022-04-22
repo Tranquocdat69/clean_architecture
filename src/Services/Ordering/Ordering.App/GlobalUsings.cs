@@ -1,0 +1,27 @@
+global using MediatR;
+global using FluentValidation;
+global using FluentValidation.AspNetCore;
+global using ECom.BuildingBlocks.SharedKernel.Interfaces;
+global using ECom.Services.Ordering.Domain.AggregateModels.OrderAggregate.Rings;
+global using Disruptor;
+global using Disruptor.Dsl;
+global using ECom.BuildingBlocks.LogLib.KafkaLogger;
+global using ECom.BuildingBlocks.LogLib.KafkaLogger.Configs;
+global using ECom.Services.Ordering.Infrastructure;
+global using Microsoft.EntityFrameworkCore;
+global using ECom.Services.Ordering.App.Application.Commands;
+global using ECom.Services.Ordering.App.DTOs;
+global using ECom.Services.Ordering.Domain.AggregateModels.OrderAggregate;
+global using ECom.BuildingBlocks.MessageQueue.KafkaMessageQueue;
+global using Confluent.Kafka;
+global using ECom.Services.Ordering.App.Application.Integrations;
+global using ECom.Services.Ordering.Domain.Exceptions;
+global using ECom.Services.Ordering.App.Application.Validations;
+global using ECom.Services.Ordering.App.Application.Behaviors;
+global using ECom.BuildingBlocks.MessageQueue.KafkaMessageQueue.Configs;
+global using System.Text.RegularExpressions;
+global using ECom.BuildingBlocks.SharedKernel.Extensions;
+global using ECom.Services.Ordering.Domain.AggregateModels.OrderAggregate.Events;
+global using NetMQ;
+global using NetMQ.Sockets;
+

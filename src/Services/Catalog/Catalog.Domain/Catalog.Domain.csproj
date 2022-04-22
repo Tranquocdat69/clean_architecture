@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ECom.Services.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="AggregateModels\CatalogAggregate\Events\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="SharedKernel">
+      <HintPath>..\..\..\BuildingBlocks\SharedKernel.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
