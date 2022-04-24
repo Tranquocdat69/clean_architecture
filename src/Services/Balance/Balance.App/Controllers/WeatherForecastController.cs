@@ -1,32 +1,24 @@
+using Confluent.Kafka;
+using ECom.BuildingBlocks.MessageQueue.KafkaMessageQueue;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Balance.App.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("PublishMsgToBalanceCommandTopic")]
 public class WeatherForecastController : ControllerBase
 {
-    private static readonly string[] Summaries = new[]
-    {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
+    private readonly KafkaProducer<string, string> _producer;
 
-    private readonly ILogger<WeatherForecastController> _logger;
-
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
+    public WeatherForecastController(KafkaProducer<string, string> producer)
     {
-        _logger = logger;
+        _producer = producer;
     }
 
-    [HttpGet(Name = "GetWeatherForecast")]
-    public IEnumerable<WeatherForecast> Get()
+    [HttpGet(Name = "PublishMsgToBalanceCommandTopic")]
+    public IActionResult Get()
     {
-        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-        {
-            Date = DateTime.Now.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        })
-        .ToArray();
+        _producer.Produce(new Message<string, string>() { Key = "command"+Guid.NewGuid().ToString() ,Value = "{\"TotalCost\": 100,\"UserId\": 1,\"ReplyAddress\": \"localhost:8888\"}"},"balance-command-topic");
+        return Ok();
     }
 }

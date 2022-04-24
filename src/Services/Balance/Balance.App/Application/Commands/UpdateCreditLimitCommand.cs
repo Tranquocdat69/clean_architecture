@@ -3,8 +3,10 @@
 {
     public class UpdateCreditLimitCommand : IRequest
     {
-        public decimal TotalCost { get; set; }
         public int UserId { get; set; }
+        public decimal TotalCost { get; set; }
         public string ReplyAddress { get; set; }
+        public string RequestId { get; set; }
+
     }
 }

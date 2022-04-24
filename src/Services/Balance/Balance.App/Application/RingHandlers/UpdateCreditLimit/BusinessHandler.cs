@@ -4,7 +4,7 @@
     {
         public void OnEvent(UpdateCreditLimitEvent data, long sequence, bool endOfBatch)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Business Handler OKE");
         }
     }
 }

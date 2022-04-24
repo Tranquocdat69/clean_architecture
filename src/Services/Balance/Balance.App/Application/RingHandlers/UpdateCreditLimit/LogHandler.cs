@@ -2,9 +2,21 @@
 {
     public class LogHandler : IRingHandler<UpdateCreditLimitEvent>
     {
+        private readonly ILogger<LogHandler> _logger;
+        private readonly int _handlerId;
+
+        public LogHandler(ILogger<LogHandler> logger, int handlerId)
+        {
+            _logger = logger;
+            _handlerId = handlerId;
+        }
+
         public void OnEvent(UpdateCreditLimitEvent data, long sequence, bool endOfBatch)
         {
-            throw new NotImplementedException();
+            if (_handlerId == 1)
+            {
+                Console.WriteLine(data.Offset);
+            }
         }
     }
 }

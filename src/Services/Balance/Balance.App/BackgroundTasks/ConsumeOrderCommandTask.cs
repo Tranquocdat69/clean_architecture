@@ -1,16 +1,19 @@
 ﻿using Confluent.Kafka;
 using ECom.BuildingBlocks.MessageQueue.KafkaMessageQueue;
+using ECom.Services.Balance.App.Application.RingHandlers;
 
 namespace ECom.Services.Balance.App.BackgroundTasks
 {
     public class ConsumeOrderCommandTask : BackgroundService
     {
-        //private readonly string _balanceTopic = "balance-command-topic";
+        private readonly RingBuffer<UpdateCreditLimitEvent> _inputRing;
         private readonly KafkaConsumer<string, string> _consumer;
         private readonly IConfiguration _configuration;
 
-        public ConsumeOrderCommandTask(KafkaConsumer<string, string> consumer, IConfiguration configuration)
+
+        public ConsumeOrderCommandTask(RingBuffer<UpdateCreditLimitEvent> inputRing, KafkaConsumer<string, string> consumer, IConfiguration configuration)
         {
+            _inputRing = inputRing;
             _consumer = consumer;
             _configuration = configuration;
         }
@@ -24,9 +27,14 @@ namespace ECom.Services.Balance.App.BackgroundTasks
                     {
                         if (record != null)
                         {
-                            Console.WriteLine(record);
+                            var sequence = _inputRing.Next();
+                            var data = _inputRing[sequence];
+                            data.Offset = record.Offset.Value;
+                            Console.WriteLine(record.Message.Value);
+
+                            _inputRing.Publish(sequence);
                         }
-                    }, stoppingToken, _configuration.GetSection("Kafka").GetSection("CommandTopic").Value);
+                    }, stoppingToken, _configuration.GetSection("Kafka").GetSection("CommandTopic").Value, 0);
                 });
             }
         }
