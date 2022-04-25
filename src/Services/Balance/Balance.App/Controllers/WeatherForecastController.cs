@@ -15,10 +15,10 @@ public class WeatherForecastController : ControllerBase
         _producer = producer;
     }
 
-    [HttpGet(Name = "PublishMsgToBalanceCommandTopic")]
-    public IActionResult Get()
+    [HttpGet(Name = "PublishMsgToBalanceCommandTopic/{userId}/{totalCost}")]
+    public IActionResult Get(int userId, decimal totalCost)
     {
-        _producer.Produce(new Message<string, string>() { Key = "command"+Guid.NewGuid().ToString() ,Value = "{\"TotalCost\": 100,\"UserId\": 1,\"ReplyAddress\": \"localhost:8888\"}"},"balance-command-topic");
+        _producer.Produce(new Message<string, string>() { Key = "command"+Guid.NewGuid().ToString() ,Value = "{\"TotalCost\": "+totalCost+",\"UserId\": "+userId+",\"ReplyAddress\": \"localhost:8888\"}"},"balance-command-topic");
         return Ok();
     }
 }

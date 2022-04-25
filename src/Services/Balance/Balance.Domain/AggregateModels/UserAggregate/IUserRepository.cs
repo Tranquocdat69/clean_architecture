@@ -1,8 +1,6 @@
 ﻿namespace ECom.Services.Balance.Domain.AggregateModels.UserAggregate
 {
-    public interface IUserRepository : IRepositoryBase<User>
+    public interface IUserRepository : IKeyValuePairRepository<InMemoryUser, int>
     {
-        void Update(User Balance);
-        User Get(int id);
     }
 }

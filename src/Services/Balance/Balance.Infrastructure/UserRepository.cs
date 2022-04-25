@@ -2,30 +2,38 @@
 {
     public class UserRepository : IUserRepository
     {
-        private readonly UserDbContext _context;
+        private static IDictionary<int, InMemoryUser> _users;
         private readonly ILogger<UserRepository> _logger;
 
-        public IUnitOfWork UnitOfWork
+        public UserRepository(ILogger<UserRepository> logger)
         {
-            get
-            {
-                return _context;
-            }
-        }
-        public UserRepository(UserDbContext context, ILogger<UserRepository> logger)
-        {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _users = _users ?? new Dictionary<int, InMemoryUser>();
             _logger = logger;
         }
 
-        public void Update(User Balance)
+        public void Add(int id, InMemoryUser user)
         {
-            throw new NotImplementedException();
+            if (_users.ContainsKey(id))
+            {
+                _users[id] = user;
+            }
+            else
+            {
+                _users.Add(id, user);
+            }
+        }
+        public bool Exist(int id)
+        {
+            return _users.ContainsKey(id);
         }
 
-        public User Get(int id)
+        public InMemoryUser GetT(int id)
         {
-            throw new NotImplementedException();
+            if (_users.ContainsKey(id))
+            {
+                return _users[id];
+            }
+            return null;
         }
     }
 }

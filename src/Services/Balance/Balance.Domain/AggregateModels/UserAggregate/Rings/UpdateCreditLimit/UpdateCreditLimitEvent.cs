@@ -2,10 +2,10 @@
 {
     public class UpdateCreditLimitEvent : BaseRingEvent
     {
-        public long Offset { get; set; }
-        public string UserId { get; set; }
-        public double Amount { get; set; }
+        public int UserId { get; set; }
+        public decimal TotalCost { get; set; }
         public string ReplyAddress { get; set; }
-        public string UpdateCreditLimitCommandString { get; set; }
+        public long Offset { get; set; }
+        public bool IsCompensatedMessage { get; set; }
     }
 }

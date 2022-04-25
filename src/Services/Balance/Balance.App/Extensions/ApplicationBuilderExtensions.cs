@@ -1,9 +1,45 @@
-﻿using ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace ECom.Services.Balance.App.Extensions
 {
     public static class ApplicationBuilderExtensions
     {
+        private const string DB_CONNECTION_KEY = "BalanceDBSqlServer";
+
+        public static IHost MigrateDbContext<TContext>(this IHost host, Action<TContext, IServiceProvider> seeder, IConfiguration configuration) where TContext : DbContext
+        {
+            using (var scope = host.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                var context = services.GetService<TContext>();
+                var logger = services.GetRequiredService<ILogger<TContext>>();
+                try
+                {
+                    InvokeSeeder(configuration, seeder, context, services);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "An error occurred while migrating the database used on context {DbContextName}", typeof(TContext).Name);
+                    throw;
+                }
+            }
+            return host;
+        }
+
+        public static void InvokeSeeder<TContext>(IConfiguration configuration, Action<TContext, IServiceProvider> seeder, TContext? context, IServiceProvider serviceProvider) where TContext : DbContext
+        {
+            var connectionString = configuration.GetConnectionString(DB_CONNECTION_KEY);
+
+            if (context != null)
+            {
+                if (!String.IsNullOrEmpty(connectionString))
+                {
+                    context.Database.Migrate();
+                }
+                seeder(context, serviceProvider);
+            }
+        }
+
         /*public static IHost InitBalanceRingBuffer(this IHost host, IConfiguration configuration)
         {
             var serviceProvider = new ServiceCollection().BuildServiceProvider();

@@ -5,7 +5,7 @@
         public string ReplyAddress { get; set; }
         public bool IsSuccess { get; set; }
         public string Message { get; set; }
-        public string UserId { get; set; }
+        public int UserId { get; set; }
 
         public override string ToString()
         {

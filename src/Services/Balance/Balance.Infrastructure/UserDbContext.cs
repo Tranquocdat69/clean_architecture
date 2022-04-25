@@ -8,6 +8,7 @@ namespace ECom.Services.Balance.Infrastructure
         public const string DEFAULT_SCHEMA = "Balance";
 
         public DbSet<User> Users { get; set; }
+
         public UserDbContext(DbContextOptions<UserDbContext> options) : base(options)
         {
         }
