@@ -1,27 +1,35 @@
 ﻿using ECom.Services.Balance.Domain.AggregateModels.UserAggregate;
+using NetMQ;
 using NetMQ.Sockets;
 
 namespace ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit
 {
     public class IntegrationReplyHandler : IRingHandler<UpdateCreditLimitReplyEvent>
     {
-        private readonly int _handlerId;
         private IDictionary<string, PushSocket> _dicPushSocket;
         private readonly IUserRepository _userRepository;
+        private PushSocket socket;
 
-        public IntegrationReplyHandler(IUserRepository userRepository, int handlerId)
+        public IntegrationReplyHandler(IUserRepository userRepository)
         {
-            _handlerId = handlerId;
             _userRepository = userRepository;
             _dicPushSocket = _dicPushSocket ?? new Dictionary<string, PushSocket>();
         }
 
         public void OnEvent(UpdateCreditLimitReplyEvent data, long sequence, bool endOfBatch)
         {
-            if (_userRepository.Exist(data.UserId) && _handlerId == _userRepository.GetT(data.UserId).ReplyHandlerId)
+            if (_dicPushSocket.ContainsKey(data.ReplyAddress))
             {
-                Console.WriteLine(data.Message);
+                socket = _dicPushSocket[data.ReplyAddress];
             }
+            else
+            {
+                socket = new PushSocket();
+                string host = "tcp://"+data.ReplyAddress;
+                socket.Connect(host);
+                _dicPushSocket.Add(data.ReplyAddress, socket);
+            }
+            socket.SendFrame(data.ToString());
         }
     }
 }

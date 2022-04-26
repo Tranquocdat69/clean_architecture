@@ -23,7 +23,7 @@ namespace ECom.Services.Balance.App.BackgroundTasks
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await Task.Run(() =>
+                await Task.Factory.StartNew(() =>
                 {
                     _consumer.Consume(record =>
                     {
@@ -32,6 +32,7 @@ namespace ECom.Services.Balance.App.BackgroundTasks
                             UpdateCreditLimitCommand updateCreditLimitCommand = new UpdateCreditLimitCommand().FromString(record.Message.Value);
                             updateCreditLimitCommand.IsCompensatedMessage = record.Message.Key.Contains("command") ? false : true;
                             updateCreditLimitCommand.Offset = record.Offset.Value;
+                            updateCreditLimitCommand.RequestId = record.Message.Key.Replace("command","");
 
                             _mediator.Send(updateCreditLimitCommand);
                         }

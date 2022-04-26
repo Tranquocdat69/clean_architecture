@@ -110,7 +110,6 @@ namespace ECom.Services.Balance.App.Extensions
             int persistentRingSize    = Int32.Parse(configuration.GetSection("Disruptor").GetSection("PersistentRingSize").Value);
             int replyRingSize         = Int32.Parse(configuration.GetSection("Disruptor").GetSection("ReplyRingSize").Value);
             int numberOfLogHandlers   = Int32.Parse(configuration.GetSection("Disruptor").GetSection("NumberOfLogHandlers").Value);
-            int numberOfReplyHandlers = Int32.Parse(configuration.GetSection("Disruptor").GetSection("NumberOfReplyHandlers").Value);
 
             services.AddSingleton(sp =>
             {
@@ -134,7 +133,7 @@ namespace ECom.Services.Balance.App.Extensions
             {
                 var userRepository = sp.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>();
                 var replyDisruptor = new Disruptor<UpdateCreditLimitReplyEvent>(() => new UpdateCreditLimitReplyEvent(), replyRingSize);
-                replyDisruptor.HandleEventsWith(GetReplyHandlers(userRepository, numberOfReplyHandlers));
+                replyDisruptor.HandleEventsWith(new IntegrationReplyHandler(userRepository));
 
                 return replyDisruptor.Start();
             });
@@ -159,17 +158,6 @@ namespace ECom.Services.Balance.App.Extensions
             }
 
             return logHandlers;
-        }
-        private static IntegrationReplyHandler[] GetReplyHandlers(IUserRepository userRepository, int size)
-        {
-            IntegrationReplyHandler[] replyHandlers = new IntegrationReplyHandler[size];
-
-            for (int i = 0; i < size; i++)
-            {
-                replyHandlers[i] = new IntegrationReplyHandler(userRepository, i + 1);
-            }
-
-            return replyHandlers;
         }
     }
 }

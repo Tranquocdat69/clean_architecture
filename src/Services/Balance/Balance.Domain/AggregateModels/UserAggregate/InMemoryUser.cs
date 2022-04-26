@@ -12,6 +12,5 @@ namespace ECom.Services.Balance.Domain.AggregateModels.UserAggregate
         public string Username { get; set; }
         public decimal CreditLimit { get; set; }
         public int LogHandlerId { get; set; }
-        public int ReplyHandlerId { get; set; }
     }
 }

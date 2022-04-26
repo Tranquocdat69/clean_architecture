@@ -19,9 +19,8 @@ app.MigrateDbContext<UserDbContext>((context, sp) =>
     var env = sp.GetRequiredService<IHostEnvironment>();
 
     int numberOfLogHanlers = Int32.Parse(builder.Configuration.GetSection("Disruptor").GetSection("NumberOfLogHandlers").Value);
-    int numberOfReplyHandlers = Int32.Parse(builder.Configuration.GetSection("Disruptor").GetSection("NumberOfReplyHandlers").Value);
 
-    new UserDbContextSeed().SeedAsync(userDbContext, userRepository, env, numberOfLogHanlers, numberOfReplyHandlers).Wait();
+    new UserDbContextSeed().SeedAsync(userDbContext, userRepository, env, numberOfLogHanlers).Wait();
 }, builder.Configuration);
 
 app.UseSwagger();

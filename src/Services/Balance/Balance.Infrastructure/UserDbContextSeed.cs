@@ -4,28 +4,27 @@ namespace ECom.Services.Balance.Infrastructure
 {
     public class UserDbContextSeed
     {
-        public async Task SeedAsync(UserDbContext userDbContext, IUserRepository userRepository, IHostEnvironment env, int numberOfLogHandlers, int numberOfReplyHandlers)
+        public async Task SeedAsync(UserDbContext userDbContext, IUserRepository userRepository, IHostEnvironment env, int numberOfLogHandlers)
         {
             string contentRootPath = env.ContentRootPath.Replace("Balance.App", "Balance.Infrastructure");
             
             if (userDbContext.Users.Any())
             {
                 IEnumerable<User> users = await userDbContext.Users.ToListAsync();
-                InitInMemoryUsers(userRepository, users, numberOfLogHandlers, numberOfReplyHandlers);
+                InitInMemoryUsers(userRepository, users, numberOfLogHandlers);
             }
             else
             {
                 IEnumerable<User> users = GetCustomerBalances(contentRootPath);
                 userDbContext.Users.AddRange(users);
                 userDbContext.SaveChanges();
-                InitInMemoryUsers(userRepository, users, numberOfLogHandlers, numberOfReplyHandlers);
+                InitInMemoryUsers(userRepository, users, numberOfLogHandlers);
             }
         }
 
-        private void InitInMemoryUsers(IUserRepository userRepository, IEnumerable<User> users, int numberOfLogHandlers, int numberOfReplyHandlers)
+        private void InitInMemoryUsers(IUserRepository userRepository, IEnumerable<User> users, int numberOfLogHandlers)
         {
             int currentLogHandler = 1;
-            int currentReplyHandler = 1;
 
             foreach (var u in users)
             {
@@ -34,21 +33,14 @@ namespace ECom.Services.Balance.Infrastructure
                     UserId = u.Id,
                     Username = u.Name,
                     CreditLimit = u.CreditLimit,
-                    LogHandlerId = currentLogHandler,
-                    ReplyHandlerId = currentReplyHandler,
+                    LogHandlerId = currentLogHandler
                 });
 
                 currentLogHandler++;
-                currentReplyHandler++;
 
                 if (currentLogHandler > numberOfLogHandlers)
                 {
                     currentLogHandler = 1;
-                }
-
-                if (currentReplyHandler > numberOfReplyHandlers)
-                {
-                    currentReplyHandler = 1;
                 }
             }
         }

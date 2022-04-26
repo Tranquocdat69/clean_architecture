@@ -10,6 +10,7 @@ namespace ECom.Services.Balance.App.Application.Commands
         public string ReplyAddress { get; set; }
         public long Offset { get; set; }
         public bool IsCompensatedMessage { get; set; }
+        public string RequestId { get; set; }
 
         public UpdateCreditLimitCommand FromString(string str)
         {
@@ -21,7 +22,7 @@ namespace ECom.Services.Balance.App.Application.Commands
 
             var userId = Int32.Parse(userIdRaw.Substring(userIdRaw.ToString().IndexOf(":") + 1));
             var totalCost = Int32.Parse(totalCostRaw.Substring(totalCostRaw.ToString().IndexOf(":") + 1));
-            var replyAddress = replyAddressRaw.Substring(replyAddressRaw.ToString().IndexOf(":") + 1);
+            var replyAddress = replyAddressRaw.Substring(replyAddressRaw.ToString().IndexOf(":") + 1).Trim();
 
             return new UpdateCreditLimitCommand()
             {
