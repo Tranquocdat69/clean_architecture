@@ -29,6 +29,8 @@ namespace ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit
                 socket.Connect(host);
                 _dicPushSocket.Add(data.ReplyAddress, socket);
             }
+
+            Console.WriteLine(data.Message);
             socket.SendFrame(data.ToString());
         }
     }

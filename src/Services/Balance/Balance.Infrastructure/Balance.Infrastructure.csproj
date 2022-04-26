@@ -26,10 +26,4 @@
     <ProjectReference Include="..\Balance.Domain\Balance.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="SharedKernel">
-      <HintPath>..\..\..\BuildingBlocks\SharedKernel.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>

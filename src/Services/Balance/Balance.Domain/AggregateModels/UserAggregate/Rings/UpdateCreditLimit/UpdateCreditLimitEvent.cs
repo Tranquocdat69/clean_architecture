@@ -7,5 +7,6 @@
         public string ReplyAddress { get; set; }
         public long Offset { get; set; }
         public bool IsCompensatedMessage { get; set; }
+        public string UpdateCreditLimitCommandString { get; set; }
     }
 }

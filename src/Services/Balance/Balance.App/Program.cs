@@ -14,13 +14,12 @@ var app = builder.Build();
 
 app.MigrateDbContext<UserDbContext>((context, sp) =>
 {
-    var userDbContext = sp.GetRequiredService<UserDbContext>();
     var userRepository = sp.GetRequiredService<IUserRepository>();
     var env = sp.GetRequiredService<IHostEnvironment>();
-
     int numberOfLogHanlers = Int32.Parse(builder.Configuration.GetSection("Disruptor").GetSection("NumberOfLogHandlers").Value);
 
-    new UserDbContextSeed().SeedAsync(userDbContext, userRepository, env, numberOfLogHanlers).Wait();
+    new UserDbContextSeed().SeedAsync(context, userRepository, env, numberOfLogHanlers).Wait();
+    new KafkaOffsetSeed().SeedAsync(env).Wait();
 }, builder.Configuration);
 
 app.UseSwagger();

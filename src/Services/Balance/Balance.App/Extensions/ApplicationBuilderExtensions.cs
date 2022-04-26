@@ -6,7 +6,8 @@ namespace ECom.Services.Balance.App.Extensions
     {
         private const string DB_CONNECTION_KEY = "BalanceDBSqlServer";
 
-        public static IHost MigrateDbContext<TContext>(this IHost host, Action<TContext, IServiceProvider> seeder, IConfiguration configuration) where TContext : DbContext
+        public static IHost MigrateDbContext<TContext>(this IHost host, Action<TContext, IServiceProvider> seeder, IConfiguration configuration)
+            where TContext : DbContext
         {
             using (var scope = host.Services.CreateScope())
             {
@@ -26,7 +27,8 @@ namespace ECom.Services.Balance.App.Extensions
             return host;
         }
 
-        public static void InvokeSeeder<TContext>(IConfiguration configuration, Action<TContext, IServiceProvider> seeder, TContext? context, IServiceProvider serviceProvider) where TContext : DbContext
+        private static void InvokeSeeder<TContext>(IConfiguration configuration, Action<TContext, IServiceProvider> seeder, TContext? context, IServiceProvider serviceProvider)
+            where TContext : DbContext
         {
             var connectionString = configuration.GetConnectionString(DB_CONNECTION_KEY);
 

@@ -8,9 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="SharedKernel">
-      <HintPath>..\..\..\BuildingBlocks\SharedKernel.dll</HintPath>
-    </Reference>
+    <PackageReference Include="SharedKernel" Version="1.0.3" />
   </ItemGroup>
 
 </Project>

@@ -115,11 +115,12 @@ namespace ECom.Services.Balance.App.Extensions
             {
                 var userRepository = sp.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>();
                 var logger = sp.GetRequiredService<ILogger<LogHandler>>();
+                var mediator = sp.GetRequiredService<IMediator>();
                 var persistentDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitPersistentEvent>>();
                 var replyDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitReplyEvent>>();
 
                 var inputDisruptor = new Disruptor<UpdateCreditLimitEvent>(() => new UpdateCreditLimitEvent(), inputRingSize);
-                inputDisruptor.HandleEventsWith(GetLogHandlers(userRepository, logger, numberOfLogHandlers))
+                inputDisruptor.HandleEventsWith(GetLogHandlers(mediator, userRepository, logger, numberOfLogHandlers))
                 .Then(new BusinessHandler(userRepository,persistentDisruptor, replyDisruptor));
 
                 return inputDisruptor.Start();
@@ -148,13 +149,13 @@ namespace ECom.Services.Balance.App.Extensions
         }
 
 
-        private static LogHandler[] GetLogHandlers(IUserRepository userRepository, ILogger<LogHandler> logger, int size)
+        private static LogHandler[] GetLogHandlers(IMediator mediator,IUserRepository userRepository, ILogger<LogHandler> logger, int size)
         {
             LogHandler[] logHandlers = new LogHandler[size];
 
             for (int i = 0; i < size; i++)
             {
-                logHandlers[i] = new LogHandler(userRepository, logger, i + 1);
+                logHandlers[i] = new LogHandler(userRepository, logger, i + 1, mediator);
             }
 
             return logHandlers;

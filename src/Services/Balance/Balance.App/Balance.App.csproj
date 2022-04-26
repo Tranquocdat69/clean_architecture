@@ -10,6 +10,8 @@
 	<ItemGroup>
 		<PackageReference Include="Confluent.Kafka" Version="1.8.2" />
 		<PackageReference Include="Disruptor" Version="4.0.0" />
+		<PackageReference Include="KafkaLogger" Version="1.0.3" />
+		<PackageReference Include="KafkaMessageQueue" Version="1.0.3" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.4">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -27,18 +29,6 @@
 
 	<ItemGroup>
 		<Folder Include="Application\Validations\" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Reference Include="KafkaLogger">
-			<HintPath>..\..\..\BuildingBlocks\KafkaLogger.dll</HintPath>
-		</Reference>
-		<Reference Include="KafkaMessageQueue">
-			<HintPath>..\..\..\BuildingBlocks\KafkaMessageQueue.dll</HintPath>
-		</Reference>
-		<Reference Include="SharedKernel">
-			<HintPath>..\..\..\BuildingBlocks\SharedKernel.dll</HintPath>
-		</Reference>
 	</ItemGroup>
 
 </Project>

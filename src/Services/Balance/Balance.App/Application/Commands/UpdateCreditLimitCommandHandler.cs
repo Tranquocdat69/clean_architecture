@@ -17,8 +17,6 @@
             data.UserId = request.UserId;
             data.TotalCost = request.TotalCost;
             data.ReplyAddress = request.ReplyAddress;
-            data.Offset = request.Offset;
-            data.IsCompensatedMessage = request.IsCompensatedMessage;
 
             _inputRing.Publish(sequence);
 

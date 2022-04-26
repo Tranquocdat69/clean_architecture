@@ -43,6 +43,8 @@ namespace ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit
                     persistentEvent.UserId = data.UserId;
                     persistentEvent.CreditLimit = newCreditLimit;
                     _ringPersistentBuffer.Publish(sq);
+
+                    Console.WriteLine("Current Credit Limit: "+currentInMemoryUser.CreditLimit);
                 }
                 else
                 {

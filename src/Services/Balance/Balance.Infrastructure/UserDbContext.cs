@@ -1,4 +1,5 @@
 ﻿using ECom.BuildingBlocks.SharedKernel.Extensions;
+using ECom.Services.Balance.Domain.AggregateModels.KafkaOffsetAggregate;
 
 namespace ECom.Services.Balance.Infrastructure
 #nullable disable
