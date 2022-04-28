@@ -4,44 +4,44 @@ namespace ECom.Services.Balance.Infrastructure
 {
     public class UserDbContextSeed
     {
-        public async Task SeedAsync(UserDbContext userDbContext, IUserRepository userRepository, IHostEnvironment env, int numberOfLogHandlers)
+        public static long CurrentCommandTopicOffset = -1L;
+
+        public async Task SeedAsync(UserDbContext userDbContext, IUserRepository userRepository, IHostEnvironment env)
         {
             string contentRootPath = env.ContentRootPath.Replace("Balance.App", "Balance.Infrastructure");
-            
+
+            if (userDbContext.KafkaOffsets.Any())
+            {
+                KafkaOffset kafkaOffset = userDbContext.KafkaOffsets.FirstOrDefault();
+                CurrentCommandTopicOffset = kafkaOffset.CommandOffset;
+            }
+            else
+            {
+                KafkaOffset kafkaOffset = new()
+                {
+
+                };
+            }
+
             if (userDbContext.Users.Any())
             {
                 IEnumerable<User> users = await userDbContext.Users.ToListAsync();
-                InitInMemoryUsers(userRepository, users, numberOfLogHandlers);
+                InitInMemoryUsers(userRepository, users);
             }
             else
             {
                 IEnumerable<User> users = GetCustomerBalances(contentRootPath);
                 userDbContext.Users.AddRange(users);
                 userDbContext.SaveChanges();
-                InitInMemoryUsers(userRepository, users, numberOfLogHandlers);
+                InitInMemoryUsers(userRepository, users);
             }
         }
 
-        private void InitInMemoryUsers(IUserRepository userRepository, IEnumerable<User> users, int numberOfLogHandlers)
+        private void InitInMemoryUsers(IUserRepository userRepository, IEnumerable<User> users)
         {
-            int currentLogHandler = 1;
-
             foreach (var u in users)
             {
-                userRepository.Add(u.Id, new InMemoryUser()
-                {
-                    UserId = u.Id,
-                    Username = u.Name,
-                    CreditLimit = u.CreditLimit,
-                    LogHandlerId = currentLogHandler
-                });
-
-                currentLogHandler++;
-
-                if (currentLogHandler > numberOfLogHandlers)
-                {
-                    currentLogHandler = 1;
-                }
+                userRepository.Add(u.Id, new User(u.Name, u.CreditLimit));
             }
         }
 

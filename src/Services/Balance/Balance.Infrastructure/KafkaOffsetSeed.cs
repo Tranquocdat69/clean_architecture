@@ -1,15 +1,11 @@
-﻿using ECom.Services.Balance.Domain.AggregateModels.KafkaOffsetAggregate;
-using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Hosting;
+
 
 namespace ECom.Services.Balance.Infrastructure
 {
     public class KafkaOffsetSeed
     {
+        public static long CurrentCommandTopicOffset = -1L;
         public async Task SeedAsync(IHostEnvironment env)
         {
             string contentRootPath = env.ContentRootPath.Replace("Balance.App", "Balance.Infrastructure");
@@ -52,8 +48,11 @@ namespace ECom.Services.Balance.Infrastructure
             string commandOffsetStr = splits[0];
             string persistentOffsetStr = splits[0];
 
-            KafkaOffset.CommandOffset    = KafkaOffset.CommandOffset > -1 ? (long.Parse(commandOffsetStr) + 1) : -1;
-            KafkaOffset.PersistentOffset = KafkaOffset.PersistentOffset > -1 ? (long.Parse(persistentOffsetStr) + 1) : -1;
+            KafkaOffset kafkaOffset = new();
+            kafkaOffset.CommandOffset    = long.Parse(commandOffsetStr) + 1;
+            kafkaOffset.PersistentOffset = long.Parse(persistentOffsetStr) + 1;
+
+            CurrentCommandTopicOffset = kafkaOffset.CommandOffset;
         }
     }
 }

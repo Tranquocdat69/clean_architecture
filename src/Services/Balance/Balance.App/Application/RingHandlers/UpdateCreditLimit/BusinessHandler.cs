@@ -21,7 +21,7 @@ namespace ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit
         {
             string message = "";
             bool isSuccess = false;
-            long sq = 0;
+            long sq = 0L;
 
             if (_userRepository.Exist(data.UserId))
             {
@@ -30,9 +30,9 @@ namespace ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit
 
                 if (newCreditLimit >= 0)
                 {
-                    InMemoryUser currentInMemoryUser = _userRepository.GetT(data.UserId);
-                    currentInMemoryUser.CreditLimit = newCreditLimit;
-                    _userRepository.Add(data.UserId, currentInMemoryUser);
+                    User currentUser = _userRepository.GetT(data.UserId);
+                    currentUser.DecreaseCash(data.TotalCost);
+                    _userRepository.Add(data.UserId, currentUser);
 
                     isSuccess = true;
                     message = "Success";
@@ -44,7 +44,7 @@ namespace ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit
                     persistentEvent.CreditLimit = newCreditLimit;
                     _ringPersistentBuffer.Publish(sq);
 
-                    Console.WriteLine("Current Credit Limit: "+currentInMemoryUser.CreditLimit);
+                    Console.WriteLine("Current Credit Limit of " + _userRepository.GetT(data.UserId).Name + " is: " + currentUser.CreditLimit);
                 }
                 else
                 {
@@ -64,6 +64,7 @@ namespace ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit
                 replyEvent.Message = message;
                 replyEvent.UserId = data.UserId;
                 replyEvent.ReplyAddress = data.ReplyAddress;
+                replyEvent.RequestId = data.RequestId;
                 _ringRelplyBuffer.Publish(sq);
             }
         }

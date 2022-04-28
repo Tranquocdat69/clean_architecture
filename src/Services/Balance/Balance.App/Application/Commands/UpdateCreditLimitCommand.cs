@@ -11,8 +11,9 @@ namespace ECom.Services.Balance.App.Application.Commands
         public long Offset { get; set; }
         public bool IsCompensatedMessage { get; set; }
         public string RequestId { get; set; }
+        public long SequenceRing { get; set; }
 
-        public UpdateCreditLimitCommand FromString(string str)
+  /*      public UpdateCreditLimitCommand FromString(string str)
         {
             var splits = Regex.Replace(str, "[}{\"]", string.Empty).Split(',');
 
@@ -30,6 +31,6 @@ namespace ECom.Services.Balance.App.Application.Commands
                 TotalCost = totalCost,
                 ReplyAddress = replyAddress,
             };
-        }
+        }*/
     }
 }

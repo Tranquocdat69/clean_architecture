@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SharedKernel" Version="1.0.3" />
+    <PackageReference Include="FPTS.SharedKernel" Version="1.0.3" />
   </ItemGroup>
 
 </Project>

@@ -11,14 +11,10 @@
 
         public Task<Unit> Handle(UpdateCreditLimitCommand request, CancellationToken cancellationToken)
         {
-            var sequence = _inputRing.Next();
-
-            var data = _inputRing[sequence];
+            UpdateCreditLimitEvent data = _inputRing[request.SequenceRing];
             data.UserId = request.UserId;
             data.TotalCost = request.TotalCost;
             data.ReplyAddress = request.ReplyAddress;
-
-            _inputRing.Publish(sequence);
 
             return Task.FromResult(Unit.Value);
         }

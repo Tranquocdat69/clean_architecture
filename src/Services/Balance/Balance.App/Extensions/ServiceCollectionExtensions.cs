@@ -1,9 +1,4 @@
-﻿using Confluent.Kafka;
-using ECom.BuildingBlocks.LogLib.KafkaLogger;
-using ECom.BuildingBlocks.LogLib.KafkaLogger.Configs;
-using ECom.BuildingBlocks.MessageQueue.KafkaMessageQueue;
-using ECom.BuildingBlocks.MessageQueue.KafkaMessageQueue.Configs;
-using ECom.Services.Balance.App.Application.Commands;
+﻿using ECom.Services.Balance.App.Application.Commands;
 using ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit;
 using ECom.Services.Balance.App.BackgroundTasks;
 using ECom.Services.Balance.Domain.AggregateModels.UserAggregate;
@@ -23,9 +18,10 @@ namespace ECom.Services.Balance.App.Extensions
                 .AddLoggerConfiguration(configuration)
                 .AddPersistentConfiguration(configuration)
                 .AddKafkaConfiguration(configuration)
-                .AddBackgroundService()
+                //.AddBackgroundService()
                 .AddBalanceRingBuffer(configuration)
-                .AddMediatorConfiguration();
+                .AddMediatorConfiguration()
+                .AddConsumeMessageFromTopicKafkaConfiguration();
 
             return services;
         }
@@ -47,7 +43,7 @@ namespace ECom.Services.Balance.App.Extensions
 
                 config.AddKafkaLogger(configKL =>
                 {
-                    var loggerConfiguration = configuration.GetSection("KafkaLogger").Get<KafkaLoggerConfiguration>();
+                    var loggerConfiguration = configuration.GetSection("KafkaLogger").Get<LoggerKafkaConfiguration>();
                     configKL.BootstrapServers = loggerConfiguration.BootstrapServers;
                     configKL.Targets = loggerConfiguration.Targets;
                     configKL.Rules = loggerConfiguration.Rules;
@@ -77,22 +73,22 @@ namespace ECom.Services.Balance.App.Extensions
 
         private static IServiceCollection AddKafkaConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddSingleton(sp =>
+            services.AddSingleton<ISubcriber<ConsumerData<string, string>>, KafkaSubcriber<string, string>>(sp =>
             {
-                KafkaConsumerConfig consumerConfig = new KafkaConsumerConfig()
+                ConsumerBuilderConfiguration consumerConfig = new ConsumerBuilderConfiguration()
                 {
                     BootstrapServers = configuration.GetSection("Kafka").GetSection("BootstrapServers").Value,
                     EnableAutoCommit = false
                 };
-                return new KafkaConsumer<string, string>(consumerConfig);
+                return new KafkaSubcriber<string, string>(consumerConfig);
             });
-            services.AddSingleton(sp =>
+            services.AddSingleton<IPublisher<ProducerData<string, string>>, KafkaPublisher<string, string>>(sp =>
             {
-                KafkaProducerConfig producerConfig = new KafkaProducerConfig()
+                ProducerBuilderConfiguration producerConfig = new ProducerBuilderConfiguration()
                 {
                     BootstrapServers = configuration.GetSection("Kafka").GetSection("BootstrapServers").Value
                 };
-                return new KafkaProducer<string, string>(producerConfig);
+                return new KafkaPublisher<string, string>(producerConfig);
             });
 
             return services;
@@ -109,18 +105,18 @@ namespace ECom.Services.Balance.App.Extensions
             int inputRingSize         = Int32.Parse(configuration.GetSection("Disruptor").GetSection("InputRingSize").Value);
             int persistentRingSize    = Int32.Parse(configuration.GetSection("Disruptor").GetSection("PersistentRingSize").Value);
             int replyRingSize         = Int32.Parse(configuration.GetSection("Disruptor").GetSection("ReplyRingSize").Value);
-            int numberOfLogHandlers   = Int32.Parse(configuration.GetSection("Disruptor").GetSection("NumberOfLogHandlers").Value);
+            int numberOfDeserializeHandlers = Int32.Parse(configuration.GetSection("Disruptor").GetSection("NumberOfDeserializeHandlers").Value);
 
             services.AddSingleton(sp =>
             {
                 var userRepository = sp.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>();
-                var logger = sp.GetRequiredService<ILogger<LogHandler>>();
+                var logger = sp.GetRequiredService<ILogger<DeserializeHandler>>();
                 var mediator = sp.GetRequiredService<IMediator>();
                 var persistentDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitPersistentEvent>>();
                 var replyDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitReplyEvent>>();
 
                 var inputDisruptor = new Disruptor<UpdateCreditLimitEvent>(() => new UpdateCreditLimitEvent(), inputRingSize);
-                inputDisruptor.HandleEventsWith(GetLogHandlers(mediator, userRepository, logger, numberOfLogHandlers))
+                inputDisruptor.HandleEventsWith(GetLogHandlers(mediator, userRepository, logger, numberOfDeserializeHandlers))
                 .Then(new BusinessHandler(userRepository,persistentDisruptor, replyDisruptor));
 
                 return inputDisruptor.Start();
@@ -148,17 +144,27 @@ namespace ECom.Services.Balance.App.Extensions
             return services;
         }
 
-
-        private static LogHandler[] GetLogHandlers(IMediator mediator,IUserRepository userRepository, ILogger<LogHandler> logger, int size)
+        private static IServiceCollection AddConsumeMessageFromTopicKafkaConfiguration(this IServiceCollection services)
         {
-            LogHandler[] logHandlers = new LogHandler[size];
+            services.AddSingleton<IKafkaSubcriberService<string, string>, KafkaSubcriberService<string, string>>(sp =>
+            {
+                ISubcriber<ConsumerData<string, string>> subcriber = sp.GetRequiredService<ISubcriber<ConsumerData<string, string>>>();
+                return new KafkaSubcriberService<string, string>(subcriber);
+            });
+            return services;
+        }
+
+
+        private static DeserializeHandler[] GetLogHandlers(IMediator mediator,IUserRepository userRepository, ILogger<DeserializeHandler> logger, int size)
+        {
+            DeserializeHandler[] deserializeHandlers = new DeserializeHandler[size];
 
             for (int i = 0; i < size; i++)
             {
-                logHandlers[i] = new LogHandler(userRepository, logger, i + 1, mediator);
+                deserializeHandlers[i] = new DeserializeHandler(userRepository, logger, i + 1, mediator);
             }
 
-            return logHandlers;
+            return deserializeHandlers;
         }
     }
 }
