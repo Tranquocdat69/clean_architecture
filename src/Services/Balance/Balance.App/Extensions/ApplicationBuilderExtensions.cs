@@ -63,7 +63,6 @@ namespace ECom.Services.Balance.App.Extensions
             int currentDesializeHandler = 1;
             var consumeService = serviceProvider.GetRequiredService<IKafkaSubcriberService<string, string>>();
             var inputRing = serviceProvider.GetRequiredService<RingBuffer<UpdateCreditLimitEvent>>();
-            CancellationToken cancellationToken = default(CancellationToken);
 
             consumeService.StartConsumeTask(record =>
             {
@@ -87,7 +86,7 @@ namespace ECom.Services.Balance.App.Extensions
                         currentDesializeHandler = 1;
                     }
                 }
-            }, topic, KafkaOffsetSeed.CurrentCommandTopicOffset, partition, cancellationToken);
+            }, topic, UserDbContextSeed.CurrentCommandTopicOffset, partition, default);
         }
 
         /*public static IHost InitBalanceRingBuffer(this IHost host, IConfiguration configuration)

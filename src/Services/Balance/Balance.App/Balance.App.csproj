@@ -11,7 +11,7 @@
 		<PackageReference Include="Confluent.Kafka" Version="1.8.2" />
 		<PackageReference Include="Disruptor" Version="4.0.0" />
 		<PackageReference Include="FPTS.EventBusKafka" Version="1.0.2" />
-		<PackageReference Include="FPTS.Logging.Kafka" Version="1.0.0" />
+		<PackageReference Include="FPTS.Logger.Kafka" Version="1.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.4">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

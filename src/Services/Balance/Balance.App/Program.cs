@@ -1,6 +1,7 @@
 using ECom.Services.Balance.App.Extensions;
 using ECom.Services.Balance.Domain.AggregateModels.UserAggregate;
 using ECom.Services.Balance.Infrastructure;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +19,6 @@ app.MigrateDbContext<UserDbContext>((context, sp) =>
     var env = sp.GetRequiredService<IHostEnvironment>();
 
     new UserDbContextSeed().SeedAsync(context, userRepository, env).Wait();
-    new KafkaOffsetSeed().SeedAsync(env).Wait();
 });
 
 app.InitConsumeMessageFromTopicKafka();

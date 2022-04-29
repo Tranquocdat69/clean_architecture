@@ -1,7 +1,9 @@
-﻿using ECom.Services.Balance.App.Application.Commands;
+﻿using Confluent.Kafka;
+using ECom.Services.Balance.App.Application.Commands;
 using ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit;
 using ECom.Services.Balance.App.BackgroundTasks;
 using ECom.Services.Balance.Domain.AggregateModels.UserAggregate;
+using ECom.Services.Balance.Domain.AggregateModels.UserAggregate.Events;
 using ECom.Services.Balance.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +16,7 @@ namespace ECom.Services.Balance.App.Extensions
         public static IServiceCollection UseServiceCollectionConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
             services
-                .AddScoped()
+                .AddScopedServices()
                 .AddLoggerConfiguration(configuration)
                 .AddPersistentConfiguration(configuration)
                 .AddKafkaConfiguration(configuration)
@@ -25,7 +27,7 @@ namespace ECom.Services.Balance.App.Extensions
 
             return services;
         }
-        private static IServiceCollection AddScoped(this IServiceCollection services)
+        private static IServiceCollection AddScopedServices(this IServiceCollection services)
         {
             services.AddScoped<IUserRepository, UserRepository>();
             return services;
@@ -90,6 +92,14 @@ namespace ECom.Services.Balance.App.Extensions
                 };
                 return new KafkaPublisher<string, string>(producerConfig);
             });
+            services.AddSingleton<IPublisher<ProducerData<Null, string>>, KafkaPublisher<Null, string>>(sp =>
+            {
+                ProducerBuilderConfiguration producerConfig = new ProducerBuilderConfiguration()
+                {
+                    BootstrapServers = configuration.GetSection("Kafka").GetSection("BootstrapServers").Value
+                };
+                return new KafkaPublisher<Null, string>(producerConfig);
+            });
 
             return services;
         }
@@ -102,35 +112,42 @@ namespace ECom.Services.Balance.App.Extensions
 
         private static IServiceCollection AddBalanceRingBuffer(this IServiceCollection services, IConfiguration configuration)
         {
-            int inputRingSize         = Int32.Parse(configuration.GetSection("Disruptor").GetSection("InputRingSize").Value);
-            int persistentRingSize    = Int32.Parse(configuration.GetSection("Disruptor").GetSection("PersistentRingSize").Value);
-            int replyRingSize         = Int32.Parse(configuration.GetSection("Disruptor").GetSection("ReplyRingSize").Value);
+            int inputRingSize = Int32.Parse(configuration.GetSection("Disruptor").GetSection("InputRingSize").Value);
+            int persistentRingSize = Int32.Parse(configuration.GetSection("Disruptor").GetSection("PersistentRingSize").Value);
+            int replyRingSize = Int32.Parse(configuration.GetSection("Disruptor").GetSection("ReplyRingSize").Value);
             int numberOfDeserializeHandlers = Int32.Parse(configuration.GetSection("Disruptor").GetSection("NumberOfDeserializeHandlers").Value);
+            int numberOfSerializeHandlers = Int32.Parse(configuration.GetSection("Disruptor").GetSection("NumberOfSerializeHandlers").Value);
 
             services.AddSingleton(sp =>
             {
                 var userRepository = sp.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>();
                 var logger = sp.GetRequiredService<ILogger<DeserializeHandler>>();
                 var mediator = sp.GetRequiredService<IMediator>();
-                var persistentDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitPersistentEvent>>();
-                var replyDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitReplyEvent>>();
+                /*  var persistentDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitPersistentEvent>>();
+                  var replyDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitReplyEvent>>();*/
 
                 var inputDisruptor = new Disruptor<UpdateCreditLimitEvent>(() => new UpdateCreditLimitEvent(), inputRingSize);
-                inputDisruptor.HandleEventsWith(GetLogHandlers(mediator, userRepository, logger, numberOfDeserializeHandlers))
-                .Then(new BusinessHandler(userRepository,persistentDisruptor, replyDisruptor));
+                inputDisruptor.HandleEventsWith(GetDeserializeHandlers(mediator, userRepository, logger, numberOfDeserializeHandlers))
+                .Then(new BusinessHandler(userRepository, mediator));
 
                 return inputDisruptor.Start();
             });
             services.AddSingleton(sp =>
             {
+                var producer = sp.GetRequiredService<IPublisher<ProducerData<Null, string>>>();
                 var persistentDisruptor = new Disruptor<UpdateCreditLimitPersistentEvent>(() => new UpdateCreditLimitPersistentEvent(), persistentRingSize);
+
+                persistentDisruptor.HandleEventsWith(GetSerializeHandlers(numberOfSerializeHandlers))
+                .Then(new PersistentHandler(producer, configuration));
+
                 return persistentDisruptor.Start();
             });
             services.AddSingleton(sp =>
             {
                 var userRepository = sp.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>();
                 var replyDisruptor = new Disruptor<UpdateCreditLimitReplyEvent>(() => new UpdateCreditLimitReplyEvent(), replyRingSize);
-                replyDisruptor.HandleEventsWith(new IntegrationReplyHandler(userRepository));
+
+                replyDisruptor.HandleEventsWith(new ReplyHandler(userRepository));
 
                 return replyDisruptor.Start();
             });
@@ -140,7 +157,8 @@ namespace ECom.Services.Balance.App.Extensions
 
         private static IServiceCollection AddMediatorConfiguration(this IServiceCollection services)
         {
-            services.AddMediatR(typeof(UpdateCreditLimitCommand));
+            services.AddMediatR(
+                typeof(UpdateCreditLimitCommand));
             return services;
         }
 
@@ -151,11 +169,12 @@ namespace ECom.Services.Balance.App.Extensions
                 ISubcriber<ConsumerData<string, string>> subcriber = sp.GetRequiredService<ISubcriber<ConsumerData<string, string>>>();
                 return new KafkaSubcriberService<string, string>(subcriber);
             });
+
             return services;
         }
 
 
-        private static DeserializeHandler[] GetLogHandlers(IMediator mediator,IUserRepository userRepository, ILogger<DeserializeHandler> logger, int size)
+        private static DeserializeHandler[] GetDeserializeHandlers(IMediator mediator, IUserRepository userRepository, ILogger<DeserializeHandler> logger, int size)
         {
             DeserializeHandler[] deserializeHandlers = new DeserializeHandler[size];
 
@@ -165,6 +184,17 @@ namespace ECom.Services.Balance.App.Extensions
             }
 
             return deserializeHandlers;
+        }
+        private static SerializeHandler[] GetSerializeHandlers(int size)
+        {
+            SerializeHandler[] serializeHandlers = new SerializeHandler[size];
+
+            for (int i = 0; i < size; i++)
+            {
+                serializeHandlers[i] = new SerializeHandler(i + 1);
+            }
+
+            return serializeHandlers;
         }
     }
 }

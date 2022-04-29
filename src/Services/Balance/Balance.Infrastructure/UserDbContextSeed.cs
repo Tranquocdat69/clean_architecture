@@ -4,7 +4,7 @@ namespace ECom.Services.Balance.Infrastructure
 {
     public class UserDbContextSeed
     {
-        public static long CurrentCommandTopicOffset = -1L;
+        public static long CurrentCommandTopicOffset = -1;
 
         public async Task SeedAsync(UserDbContext userDbContext, IUserRepository userRepository, IHostEnvironment env)
         {
@@ -13,14 +13,19 @@ namespace ECom.Services.Balance.Infrastructure
             if (userDbContext.KafkaOffsets.Any())
             {
                 KafkaOffset kafkaOffset = userDbContext.KafkaOffsets.FirstOrDefault();
-                CurrentCommandTopicOffset = kafkaOffset.CommandOffset;
+                CurrentCommandTopicOffset = kafkaOffset.CommandOffset + 1;
             }
             else
             {
                 KafkaOffset kafkaOffset = new()
                 {
-
+                    CommandOffset = -1,
+                    PersistentOffset = 1
                 };
+                userDbContext.KafkaOffsets.Add(kafkaOffset);
+                userDbContext.SaveChanges();
+
+                CurrentCommandTopicOffset = kafkaOffset.CommandOffset + 1;
             }
 
             if (userDbContext.Users.Any())
