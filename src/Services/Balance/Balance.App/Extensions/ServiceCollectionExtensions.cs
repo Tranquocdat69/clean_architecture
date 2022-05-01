@@ -120,12 +120,11 @@ namespace ECom.Services.Balance.App.Extensions
                 var userRepository = sp.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>();
                 var logger = sp.GetRequiredService<ILogger<DeserializeHandler>>();
                 var mediator = sp.GetRequiredService<IMediator>();
-                //var persistentDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitPersistentEvent>>();
                 var replyDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitReplyEvent>>();
 
                 var inputDisruptor = new Disruptor<UpdateCreditLimitEvent>(() => new UpdateCreditLimitEvent(), inputRingSize);
                 inputDisruptor.HandleEventsWith(GetDeserializeHandlers(mediator, userRepository, logger, numberOfDeserializeHandlers))
-                .Then(new BusinessHandler(replyDisruptor, userRepository, mediator));
+                .Then(new BusinessHandler(replyDisruptor, userRepository, mediator, configuration));
 
                 return inputDisruptor.Start();
             });
@@ -134,7 +133,8 @@ namespace ECom.Services.Balance.App.Extensions
                 var producer = sp.GetRequiredService<IPublisher<ProducerData<Null, string>>>();
                 var persistentDisruptor = new Disruptor<UpdateCreditLimitPersistentEvent>(() => new UpdateCreditLimitPersistentEvent(), persistentRingSize);
 
-                persistentDisruptor.HandleEventsWith(GetSerializeHandlers(numberOfSerializeHandlers))
+                persistentDisruptor
+                .HandleEventsWith(GetSerializeHandlers(numberOfSerializeHandlers))
                 .Then(new PersistentHandler(producer, configuration));
 
                 return persistentDisruptor.Start();

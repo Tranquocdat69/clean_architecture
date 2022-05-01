@@ -30,7 +30,7 @@ public class PublishMessageController : ControllerBase
     [Route("Publish-Multi-Message")]
     public IActionResult PostMultiMsg()
     {
-        for (int i = 1; i <= 50; i++)
+        for (int i = 1; i <= 1000; i++)
         {
             var keyMsg = "command" + Guid.NewGuid().ToString();
             var valueMsg = "{\"TotalCost\": " + 1000 + ",\"UserId\": " + i + ",\"ReplyAddress\": \"localhost:8888\"}";

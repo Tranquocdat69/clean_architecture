@@ -11,7 +11,7 @@
 
         public Task<Unit> Handle(UpdateCreditLimitCommand request, CancellationToken cancellationToken)
         {
-            UpdateCreditLimitEvent data = _inputRing[request.SequenceRing];
+            var data = _inputRing[request.SequenceRing];
             data.UserId = request.UserId;
             data.TotalCost = request.TotalCost;
             data.ReplyAddress = request.ReplyAddress;

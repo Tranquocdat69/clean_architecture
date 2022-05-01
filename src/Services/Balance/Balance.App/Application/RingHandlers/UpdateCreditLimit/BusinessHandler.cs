@@ -9,12 +9,19 @@ namespace ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit
         private readonly RingBuffer<UpdateCreditLimitReplyEvent> _ringRelplyBuffer;
         private readonly IUserRepository _userRepository;
         private readonly IMediator _mediator;
+        private readonly int _numberOfSerializeHandlers;
+        private int _currentSerializeHandler = 1;
 
-        public BusinessHandler(RingBuffer<UpdateCreditLimitReplyEvent> ringRelplyBuffer, IUserRepository userRepository, IMediator mediator)
+        public BusinessHandler(
+            RingBuffer<UpdateCreditLimitReplyEvent> ringRelplyBuffer, 
+            IUserRepository userRepository, 
+            IMediator mediator,
+            IConfiguration configuration)
         {
             _ringRelplyBuffer = ringRelplyBuffer;
             _userRepository = userRepository;
             _mediator = mediator;
+            _numberOfSerializeHandlers = Int32.Parse(configuration.GetSection("Disruptor").GetSection("NumberOfSerializeHandlers").Value);
         }
 
         public void OnEvent(UpdateCreditLimitEvent data, long sequence, bool endOfBatch)
@@ -30,9 +37,15 @@ namespace ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit
 
                 if (newCreditLimit >= 0)
                 {
+                    data.SerializeHandlerId = _currentSerializeHandler;
+                    _currentSerializeHandler++;
+                    if (_currentSerializeHandler > _numberOfSerializeHandlers)
+                    {
+                        _currentSerializeHandler = 1;
+                    }
+
                     currentUser.DecreaseCash(data.TotalCost, data);
                     _mediator.DispatchDomainEventsAsync(currentUser);
-                    //_mediator.Publish(@event);
 
                     isSuccess = true;
                     message = "Success";

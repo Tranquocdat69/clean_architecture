@@ -70,7 +70,7 @@ namespace ECom.Services.Balance.App.Extensions
                 {
                     long sequence = inputRing.Next();
 
-                    UpdateCreditLimitEvent data = inputRing[sequence];
+                    var data = inputRing[sequence];
                     data.Offset = record.Offset.Value;
                     data.IsCompensatedMessage = record.Message.Key.Contains("command") ? false : true;
                     data.UpdateCreditLimitCommandString = record.Message.Value;

@@ -25,7 +25,7 @@ namespace ECom.Services.Balance.Domain.AggregateModels.UserAggregate
                         offset: ringEventData.Offset,
                         userId: ringEventData.UserId,
                         creditLimit: this.CreditLimit,
-                        serializeHandlerId: 1);
+                        serializeHandlerId: ringEventData.SerializeHandlerId);
             AddDomainEvent(@event);
         }
 

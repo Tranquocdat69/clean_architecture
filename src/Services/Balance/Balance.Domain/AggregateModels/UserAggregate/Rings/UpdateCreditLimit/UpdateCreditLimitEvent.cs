@@ -9,6 +9,7 @@
         public bool IsCompensatedMessage { get; set; }
         public long SequenceRing { get; set; }
         public string UpdateCreditLimitCommandString { get; set; }
+        public int SerializeHandlerId { get; set; }
         public int DeserializeHandlerId { get; set; }
     }
 }
