@@ -1,4 +1,6 @@
 ﻿
+using ECom.Services.Balance.Domain.AggregateModels.UserAggregate.Events.UpdateCreditLimit;
+using ECom.Services.Balance.Domain.AggregateModels.UserAggregate.Rings.UpdateCreditLimit;
 using FPTS.FIT.BDRD.BuildingBlocks.SharedKernel;
 using FPTS.FIT.BDRD.BuildingBlocks.SharedKernel.Interfaces;
 
@@ -16,9 +18,15 @@ namespace ECom.Services.Balance.Domain.AggregateModels.UserAggregate
             CreditLimit = creditLimit;
         }
 
-        public void DecreaseCash(decimal num)
+        public void DecreaseCash(decimal num, UpdateCreditLimitEvent ringEventData)
         {
             this.CreditLimit -= num;
+            var @event = new DecreaseCreditLimitDomainEvent(
+                        offset: ringEventData.Offset,
+                        userId: ringEventData.UserId,
+                        creditLimit: this.CreditLimit,
+                        serializeHandlerId: 1);
+            AddDomainEvent(@event);
         }
 
         public void IncreaseCash(decimal num)

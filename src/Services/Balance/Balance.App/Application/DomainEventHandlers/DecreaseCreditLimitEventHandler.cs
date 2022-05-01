@@ -1,5 +1,5 @@
 ﻿using ECom.Services.Balance.Domain.AggregateModels.UserAggregate;
-using ECom.Services.Balance.Domain.AggregateModels.UserAggregate.Events;
+using ECom.Services.Balance.Domain.AggregateModels.UserAggregate.Events.UpdateCreditLimit;
 
 namespace ECom.Services.Balance.App.Application.DomainEventHandlers
 {
@@ -7,11 +7,15 @@ namespace ECom.Services.Balance.App.Application.DomainEventHandlers
     {
         private readonly RingBuffer<UpdateCreditLimitPersistentEvent> _ringPersistentBuffer;
         private readonly IUserRepository _userRepository;
+        private readonly int _numberOfSerializeHandlers;
+        private int _currentSerializeHandler = 1;
 
-        public DecreaseCreditLimitEventHandler(RingBuffer<UpdateCreditLimitPersistentEvent> ringPersistentBuffer, IUserRepository userRepository)
+        public DecreaseCreditLimitEventHandler(RingBuffer<UpdateCreditLimitPersistentEvent> ringPersistentBuffer,
+            IUserRepository userRepository, IConfiguration configuration)
         {
             _ringPersistentBuffer = ringPersistentBuffer;
             _userRepository = userRepository;
+            _numberOfSerializeHandlers = Int32.Parse(configuration.GetSection("Disruptor").GetSection("NumberOfSerializeHandlers").Value);
         }
 
         public Task Handle(DecreaseCreditLimitDomainEvent @event, CancellationToken cancellationToken)
@@ -22,7 +26,14 @@ namespace ECom.Services.Balance.App.Application.DomainEventHandlers
             persistentEvent.UserId = @event.UserId;
             persistentEvent.CreditLimit = @event.CreditLimit;
             persistentEvent.Offset = @event.Offset;
-            persistentEvent.SerializeHandlerId = 1;//data.DeserializeHandlerId;
+            persistentEvent.SerializeHandlerId = _currentSerializeHandler;
+
+            _currentSerializeHandler++;
+            if (_currentSerializeHandler > _numberOfSerializeHandlers)
+            {
+                _currentSerializeHandler = 1;
+            }
+
             _ringPersistentBuffer.Publish(sq);
 
             Console.WriteLine("Current Credit Limit of " + _userRepository.GetT(@event.UserId).Name + " is: " + @event.CreditLimit);

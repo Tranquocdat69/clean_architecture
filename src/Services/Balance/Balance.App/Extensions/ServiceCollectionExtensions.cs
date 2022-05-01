@@ -1,7 +1,6 @@
 ﻿using Confluent.Kafka;
 using ECom.Services.Balance.App.Application.Commands;
 using ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit;
-using ECom.Services.Balance.App.BackgroundTasks;
 using ECom.Services.Balance.Domain.AggregateModels.UserAggregate;
 using ECom.Services.Balance.Domain.AggregateModels.UserAggregate.Events;
 using ECom.Services.Balance.Infrastructure;
@@ -20,7 +19,6 @@ namespace ECom.Services.Balance.App.Extensions
                 .AddLoggerConfiguration(configuration)
                 .AddPersistentConfiguration(configuration)
                 .AddKafkaConfiguration(configuration)
-                //.AddBackgroundService()
                 .AddBalanceRingBuffer(configuration)
                 .AddMediatorConfiguration()
                 .AddConsumeMessageFromTopicKafkaConfiguration();
@@ -106,7 +104,6 @@ namespace ECom.Services.Balance.App.Extensions
 
         private static IServiceCollection AddBackgroundService(this IServiceCollection services)
         {
-            services.AddHostedService<ConsumeOrderCommandTask>();
             return services;
         }
 
@@ -123,12 +120,12 @@ namespace ECom.Services.Balance.App.Extensions
                 var userRepository = sp.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>();
                 var logger = sp.GetRequiredService<ILogger<DeserializeHandler>>();
                 var mediator = sp.GetRequiredService<IMediator>();
-                /*  var persistentDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitPersistentEvent>>();
-                  var replyDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitReplyEvent>>();*/
+                //var persistentDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitPersistentEvent>>();
+                var replyDisruptor = sp.GetRequiredService<RingBuffer<UpdateCreditLimitReplyEvent>>();
 
                 var inputDisruptor = new Disruptor<UpdateCreditLimitEvent>(() => new UpdateCreditLimitEvent(), inputRingSize);
                 inputDisruptor.HandleEventsWith(GetDeserializeHandlers(mediator, userRepository, logger, numberOfDeserializeHandlers))
-                .Then(new BusinessHandler(userRepository, mediator));
+                .Then(new BusinessHandler(replyDisruptor, userRepository, mediator));
 
                 return inputDisruptor.Start();
             });

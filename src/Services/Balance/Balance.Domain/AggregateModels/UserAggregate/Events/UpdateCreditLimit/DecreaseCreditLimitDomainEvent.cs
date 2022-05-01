@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ECom.Services.Balance.Domain.AggregateModels.UserAggregate.Events
+namespace ECom.Services.Balance.Domain.AggregateModels.UserAggregate.Events.UpdateCreditLimit
 {
     public class DecreaseCreditLimitDomainEvent : BaseDomainEvent
     {

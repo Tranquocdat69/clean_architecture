@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace Balance.App.Controllers;
 
 [ApiController]
-[Route("PublishMsgToBalanceCommandTopic")]
 public class PublishMessageController : ControllerBase
 {
     private readonly IPublisher<ProducerData<string, string>> _producer;
@@ -14,12 +13,24 @@ public class PublishMessageController : ControllerBase
         _producer = producer;
     }
 
-    //[HttpGet(Name = "PublishMsgToBalanceCommandTopic/{userId}/{totalCost}")]
-    //int userId, decimal totalCost
-    [HttpGet(Name = "PublishMsgToBalanceCommandTopic")]
-    public IActionResult Get()
+    [HttpPost]
+    [Route("Publish-Single-Message/{userId}/{totalCost}")]
+    public IActionResult PostSingleMsg(int userId, decimal totalCost)
     {
-        for (int i = 1; i <= 1000; i++)
+        var keyMsg = "command" + Guid.NewGuid().ToString();
+        var valueMsg = "{\"TotalCost\": " + totalCost + ",\"UserId\": " + userId + ",\"ReplyAddress\": \"localhost:8888\"}";
+
+        var producerData = new ProducerData<string, string>(valueMsg, keyMsg, Topic, 0);
+        _producer.Publish(producerData);
+
+        return Ok();
+    }
+
+    [HttpPost]
+    [Route("Publish-Multi-Message")]
+    public IActionResult PostMultiMsg()
+    {
+        for (int i = 1; i <= 50; i++)
         {
             var keyMsg = "command" + Guid.NewGuid().ToString();
             var valueMsg = "{\"TotalCost\": " + 1000 + ",\"UserId\": " + i + ",\"ReplyAddress\": \"localhost:8888\"}";
@@ -27,6 +38,7 @@ public class PublishMessageController : ControllerBase
             var producerData = new ProducerData<string, string>(valueMsg, keyMsg, Topic, 0);
             _producer.Publish(producerData);
         }
+
         return Ok();
     }
 }

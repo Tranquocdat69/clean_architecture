@@ -1,16 +1,18 @@
 ﻿using ECom.Services.Balance.Domain.AggregateModels.UserAggregate;
-using ECom.Services.Balance.Domain.AggregateModels.UserAggregate.Events;
+using ECom.Services.Balance.Domain.AggregateModels.UserAggregate.Events.UpdateCreditLimit;
 using FPTS.FIT.BDRD.BuildingBlocks.SharedKernel.Extensions;
 
 namespace ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit
 {
     public class BusinessHandler : IRingHandler<UpdateCreditLimitEvent>
     {
+        private readonly RingBuffer<UpdateCreditLimitReplyEvent> _ringRelplyBuffer;
         private readonly IUserRepository _userRepository;
         private readonly IMediator _mediator;
 
-        public BusinessHandler(IUserRepository userRepository, IMediator mediator)
+        public BusinessHandler(RingBuffer<UpdateCreditLimitReplyEvent> ringRelplyBuffer, IUserRepository userRepository, IMediator mediator)
         {
+            _ringRelplyBuffer = ringRelplyBuffer;
             _userRepository = userRepository;
             _mediator = mediator;
         }
@@ -28,13 +30,7 @@ namespace ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit
 
                 if (newCreditLimit >= 0)
                 {
-                    currentUser.DecreaseCash(data.TotalCost);
-                    var @event = new DecreaseCreditLimitDomainEvent(
-                        offset: data.Offset,
-                        userId: data.UserId,
-                        creditLimit: newCreditLimit,
-                        serializeHandlerId: 1);
-                    currentUser.AddDomainEvent(@event);
+                    currentUser.DecreaseCash(data.TotalCost, data);
                     _mediator.DispatchDomainEventsAsync(currentUser);
                     //_mediator.Publish(@event);
 
@@ -53,13 +49,16 @@ namespace ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit
 
             if (!data.IsCompensatedMessage)
             {
-                var @event = new ReplyMessageDomainEvent(
-                    userId: data.UserId,
-                    replyAddress: data.ReplyAddress,
-                    requestId: data.RequestId,
-                    isSuccess: isSuccess,
-                    message: message);
-                _mediator.Publish(@event);
+                long sq = 0L;
+                sq = _ringRelplyBuffer.Next();
+                var replyEvent = _ringRelplyBuffer[sq];
+                replyEvent.IsSuccess = isSuccess;
+                replyEvent.Message = message;
+                replyEvent.UserId = data.UserId;
+                replyEvent.ReplyAddress = data.ReplyAddress;
+                replyEvent.RequestId = data.RequestId;
+                _ringRelplyBuffer.Publish(sq);
+
             }
         }
     }
