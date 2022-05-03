@@ -2,7 +2,6 @@
 using ECom.Services.Balance.App.Application.Commands;
 using ECom.Services.Balance.App.Application.RingHandlers.UpdateCreditLimit;
 using ECom.Services.Balance.Domain.AggregateModels.UserAggregate;
-using ECom.Services.Balance.Domain.AggregateModels.UserAggregate.Events;
 using ECom.Services.Balance.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
@@ -163,13 +162,12 @@ namespace ECom.Services.Balance.App.Extensions
         {
             services.AddSingleton<IKafkaSubcriberService<string, string>, KafkaSubcriberService<string, string>>(sp =>
             {
-                ISubcriber<ConsumerData<string, string>> subcriber = sp.GetRequiredService<ISubcriber<ConsumerData<string, string>>>();
+                var subcriber = sp.GetRequiredService<ISubcriber<ConsumerData<string, string>>>();
                 return new KafkaSubcriberService<string, string>(subcriber);
             });
 
             return services;
         }
-
 
         private static DeserializeHandler[] GetDeserializeHandlers(IMediator mediator, IUserRepository userRepository, ILogger<DeserializeHandler> logger, int size)
         {
